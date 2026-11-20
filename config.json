@@ -1,0 +1,5 @@
+{
+  "rules": [
+    {"id": "demo_http", "name": "示例-HTTP", "listen": "8080", "target": "127.0.0.1:5000", "enabled": false, "ws": true}
+  ]
+}

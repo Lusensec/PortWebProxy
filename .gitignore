@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# 运行期生成
+config.json.tmp
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# 日志
+*.log

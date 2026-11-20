@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PortWebProxy 控制台</title>
+<style>
+  :root{--bg:#0f172a;--card:#1e293b;--line:#334155;--txt:#e2e8f0;--mut:#94a3b8;--ok:#34d399;--bad:#f87171;--acc:#38bdf8;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,"Microsoft YaHei",sans-serif;padding:24px}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:var(--mut);margin-bottom:20px;font-size:13px}
+  .stat{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+  .pill{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 16px;min-width:110px}
+  .pill b{display:block;font-size:22px}
+  .pill span{color:var(--mut);font-size:12px}
+  table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);border-right:1px solid rgba(51,65,85,.55)}
+  th:last-child,td:last-child{border-right:none}
+  th{background:#0b1220;color:var(--mut);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em;border-bottom:2px solid var(--line)}
+  tbody tr:nth-child(even){background:rgba(11,18,32,.45)}
+  tbody tr:hover{background:rgba(56,189,248,.07)}
+  tr:last-child td{border-bottom:none}
+  .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600}
+  .on{background:rgba(52,211,153,.15);color:var(--ok)}
+  .off{background:rgba(248,113,113,.15);color:var(--bad)}
+  .row-actions button{margin-right:6px}
+  input,select{background:#0b1220;border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:7px 10px;width:100%}
+  .addbar{display:grid;grid-template-columns:1.2fr 1fr 1.4fr auto auto;gap:10px;align-items:end;margin-bottom:20px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px}
+  .addbar label{display:block;color:var(--mut);font-size:11px;margin-bottom:4px}
+  .btn{background:var(--acc);border:none;color:#04121f;font-weight:700;padding:8px 14px;border-radius:6px;cursor:pointer}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--txt);font-weight:400}
+  .btn.danger{background:rgba(248,113,113,.15);color:var(--bad);border:1px solid transparent}
+  .btn.sm{padding:4px 10px;font-size:12px}
+  .hint{color:var(--mut);font-size:12px;margin-top:8px}
+  .empty{color:var(--mut);text-align:center;padding:32px}
+  .toast{position:fixed;right:20px;bottom:20px;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--acc);padding:10px 16px;border-radius:6px;opacity:0;transform:translateY(8px);transition:.25s;pointer-events:none}
+  .toast.show{opacity:1;transform:none}
+  .toast.err{border-left-color:var(--bad)}
+  .mono{font-family:ui-monospace,Consolas,monospace;font-size:12px;color:var(--mut)}
+</style>
+</head>
+<body>
+  <h1>PortWebProxy 控制台</h1>
+  <div class="sub">简易反向代理 · 多端口转发 · 热生效，无需重启</div>
+
+  <div class="stat" id="stat"></div>
+
+  <div class="addbar">
+    <div><label>名称</label><input id="f-name" placeholder="例如：web 服务"></div>
+    <div><label>监听端口</label><input id="f-listen" placeholder="8080 或 127.0.0.1:8080"></div>
+    <div><label>转发目标 host:port</label><input id="f-target" placeholder="127.0.0.1:5000"></div>
+    <div><label>WebSocket</label>
+      <select id="f-ws"><option value="true">允许</option><option value="false">禁止</option></select>
+    </div>
+    <button class="btn" onclick="addRule()">添加规则</button>
+  </div>
+
+  <table>
+    <thead><tr>
+      <th>名称</th><th>监听</th><th>目标</th><th>WS</th><th>状态</th><th>运行</th><th></th>
+    </tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <div class="hint" id="emptyHint" style="display:none">暂无规则，在上方添加一条。</div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+function toast(msg, err){ const t=$('toast'); t.textContent=msg; t.className='toast show'+(err?' err':''); setTimeout(()=>t.classList.remove('show'),3000); }
+async function api(method, url, body){
+  const r = await fetch(url, {method, headers:{'Content-Type':'application/json'}, body: body?JSON.stringify(body):undefined});
+  const data = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(data.error||('HTTP '+r.status));
+  return data;
+}
+
+async function refresh(){
+  try{
+    const [rules, status] = await Promise.all([api('GET','/api/rules'), api('GET','/api/status')]);
+    const sb = $('stat');
+    sb.innerHTML = `
+      <div class="pill"><b>${status.total}</b><span>规则总数</span></div>
+      <div class="pill"><b>${status.enabled}</b><span>已启用</span></div>
+      <div class="pill"><b>${status.listening}</b><span>监听中</span></div>`;
+    const rows = $('rows'); rows.innerHTML='';
+    $('emptyHint').style.display = rules.rules.length?'none':'block';
+    for(const r of rules.rules){
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${esc(r.name)}</td>
+        <td class="mono">${esc(r.listen)}</td>
+        <td class="mono">${esc(r.target)}</td>
+        <td>${r.ws?'<span class="badge on">WS</span>':'<span class="badge off">无</span>'}</td>
+        <td>${r.enabled?'<span class="badge on">启用</span>':'<span class="badge off">停用</span>'}</td>
+        <td>${r.listening?'<span class="badge on">'+esc(r.sock||'')+'</span>':'<span class="badge off">未运行</span>'}</td>
+        <td class="row-actions">
+          <button class="btn sm ghost" onclick="toggleRule('${r.id}',${!r.enabled})">${r.enabled?'停用':'启用'}</button>
+          <button class="btn sm danger" onclick="delRule('${r.id}')">删除</button>
+        </td>`;
+      rows.appendChild(tr);
+    }
+  }catch(e){ toast('刷新失败: '+e.message, true); }
+}
+
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+async function addRule(){
+  const body = {name:$('f-name').value.trim(), listen:$('f-listen').value.trim(), target:$('f-target').value.trim(), ws:$('f-ws').value==='true'};
+  if(!body.listen||!body.target) return toast('监听与目标必填', true);
+  try{ await api('POST','/api/rules',body); toast('已添加 '+body.listen+' → '+body.target); refresh(); }
+  catch(e){ toast(e.message, true); }
+}
+
+async function toggleRule(id, enabled){ try{ await api('PATCH','/api/rules/'+id,{enabled}); toast(enabled?'已启用':'已停用'); refresh(); }catch(e){ toast(e.message,true);} }
+async function delRule(id){ if(!confirm('确认删除该规则？')) return; try{ await api('DELETE','/api/rules/'+id); toast('已删除'); refresh(); }catch(e){ toast(e.message,true);} }
+
+refresh();
+setInterval(refresh, 5000);
+</script>
+</body>
+</html>
