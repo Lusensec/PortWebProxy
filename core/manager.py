@@ -63,6 +63,11 @@ class RuleRegistry:
             except Exception:
                 pass
 
+    def stop_all(self) -> None:
+        """关闭全部监听（退出清理用）。"""
+        for rid in list(self._listeners):
+            self.stop_rule(rid)
+
     # ------------------------------------------------------------------
     def apply_rule(self, rule: Rule) -> None:
         """根据 enabled 状态与规则内容启停/重建监听。
