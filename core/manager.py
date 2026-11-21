@@ -28,7 +28,7 @@ class RuleRegistry:
         host = rule.listen_host
         port = rule.listen_port
         fwd = Forwarder(rule.listen, (rule.target_host, rule.target_port),
-                        rule.id, allow_ws=rule.ws)
+                        rule.id)
         fwd._log = self.log.info  # 注入日志
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -69,7 +69,7 @@ class RuleRegistry:
 
         - 停用：关闭监听
         - 启用且未监听：新建监听
-        - 启用且已在监听：仅当 listen/target/ws 变化时重建，避免无谓中断
+        - 启用且已在监听：仅当 listen/target 变化时重建，避免无谓中断
         """
         with self.store._lock:
             if not rule.enabled:
@@ -78,7 +78,6 @@ class RuleRegistry:
             live = self._active.get(rule.id)
             changed = live is None or (
                 live.target != (rule.target_host, rule.target_port)
-                or live.allow_ws != rule.ws
                 or live.listen_label != rule.listen
             )
             if changed:

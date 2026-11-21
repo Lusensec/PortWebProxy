@@ -98,7 +98,6 @@ def build_api(store: ConfigStore, registry: RuleRegistry, logger: logging.Logger
                     name=str(body.get("name", "")),
                     listen=str(body.get("listen", "")),
                     target=str(body.get("target", "")),
-                    ws=bool(body.get("ws", True)),
                     enabled=bool(body.get("enabled", True)),
                 )
                 try:
@@ -127,7 +126,7 @@ def build_api(store: ConfigStore, registry: RuleRegistry, logger: logging.Logger
             try:
                 body = self._read_body()
                 allowed = {}
-                for k in ("name", "listen", "target", "enabled", "ws"):
+                for k in ("name", "listen", "target", "enabled"):
                     if k in body:
                         allowed[k] = body[k]
                 if not allowed:
@@ -138,7 +137,7 @@ def build_api(store: ConfigStore, registry: RuleRegistry, logger: logging.Logger
                     registry.apply_rule(rule)
                 except OSError:
                     # 回滚到旧值并恢复旧监听
-                    rollback = {k: prev[k] for k in ("listen", "target", "enabled", "ws", "name")}
+                    rollback = {k: prev[k] for k in ("listen", "target", "enabled", "name")}
                     store.update(rid, **rollback)
                     registry.apply_rule(store.get(rid))
                     raise

@@ -26,7 +26,7 @@
   .off{background:rgba(248,113,113,.15);color:var(--bad)}
   .row-actions button{margin-right:6px}
   input,select{background:#0b1220;border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:7px 10px;width:100%}
-  .addbar{display:grid;grid-template-columns:1.2fr 1fr 1.4fr auto auto;gap:10px;align-items:end;margin-bottom:20px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px}
+  .addbar{display:grid;grid-template-columns:1.2fr 1fr 1.4fr auto;gap:10px;align-items:end;margin-bottom:20px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px}
   .addbar label{display:block;color:var(--mut);font-size:11px;margin-bottom:4px}
   .btn{background:var(--acc);border:none;color:#04121f;font-weight:700;padding:8px 14px;border-radius:6px;cursor:pointer}
   .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--txt);font-weight:400}
@@ -50,15 +50,12 @@
     <div><label>名称</label><input id="f-name" placeholder="例如：web 服务"></div>
     <div><label>监听端口</label><input id="f-listen" placeholder="8080 或 127.0.0.1:8080"></div>
     <div><label>转发目标 host:port</label><input id="f-target" placeholder="127.0.0.1:5000"></div>
-    <div><label>WebSocket</label>
-      <select id="f-ws"><option value="true">允许</option><option value="false">禁止</option></select>
-    </div>
     <button class="btn" onclick="addRule()">添加规则</button>
   </div>
 
   <table>
     <thead><tr>
-      <th>名称</th><th>监听</th><th>目标</th><th>WS</th><th>状态</th><th>运行</th><th></th>
+      <th>名称</th><th>监听</th><th>目标</th><th>状态</th><th>运行</th><th></th>
     </tr></thead>
     <tbody id="rows"></tbody>
   </table>
@@ -92,7 +89,6 @@ async function refresh(){
         <td>${esc(r.name)}</td>
         <td class="mono">${esc(r.listen)}</td>
         <td class="mono">${esc(r.target)}</td>
-        <td>${r.ws?'<span class="badge on">WS</span>':'<span class="badge off">无</span>'}</td>
         <td>${r.enabled?'<span class="badge on">启用</span>':'<span class="badge off">停用</span>'}</td>
         <td>${r.listening?'<span class="badge on">'+esc(r.sock||'')+'</span>':'<span class="badge off">未运行</span>'}</td>
         <td class="row-actions">
@@ -107,7 +103,7 @@ async function refresh(){
 function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
 async function addRule(){
-  const body = {name:$('f-name').value.trim(), listen:$('f-listen').value.trim(), target:$('f-target').value.trim(), ws:$('f-ws').value==='true'};
+  const body = {name:$('f-name').value.trim(), listen:$('f-listen').value.trim(), target:$('f-target').value.trim()};
   if(!body.listen||!body.target) return toast('监听与目标必填', true);
   try{ await api('POST','/api/rules',body); toast('已添加 '+body.listen+' → '+body.target); refresh(); }
   catch(e){ toast(e.message, true); }

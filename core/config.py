@@ -57,7 +57,6 @@ class Rule:
     listen: str          # 'port' 或 'host:port'
     target: str          # 'host:port' 或 'port'（按目标主机）
     enabled: bool = True
-    ws: bool = True     # 是否允许 WebSocket 升级
     created_at: float = field(default_factory=lambda: __import__("time").time())
 
     @property
@@ -97,9 +96,9 @@ class Rule:
             listen=listen,
             target=target,
             enabled=bool(data.get("enabled", True)),
-            ws=bool(data.get("ws", True)),
             created_at=float(data.get("created_at") or 0) or __import__("time").time(),
         )
+        # 注：旧 config.json 的 "ws" 键被静默忽略（向前兼容），不报错
 
     def validate(self) -> None:
         _parse_endpoint(self.listen, "listen", "127.0.0.1")
@@ -155,7 +154,7 @@ class ConfigStore:
             seen.add(key)
 
     # ---------- 操作（均在锁内完成校验与落盘） ----------
-    def add(self, name: str, listen: str, target: str, ws: bool = True, enabled: bool = True) -> Rule:
+    def add(self, name: str, listen: str, target: str, enabled: bool = True) -> Rule:
         with self._lock:
             candidate = Rule(
                 id=_unique_id([r.id for r in self.rules]),
@@ -163,7 +162,6 @@ class ConfigStore:
                 listen=listen,
                 target=target,
                 enabled=enabled,
-                ws=ws,
             )
             candidate.validate()
             self._check_listen_unique(self.rules + [candidate])
@@ -179,12 +177,12 @@ class ConfigStore:
             return None
 
     def update(self, rid: str, **fields) -> Rule:
-        """支持字段: name, listen, target, enabled, ws。listen 变更时校验冲突。
+        """支持字段: name, listen, target, enabled。listen 变更时校验冲突。
 
         先在校验副本上完成所有校验，通过后再改回原对象并落盘，
         保证校验失败不会把内存中的规则留在半改状态。
         """
-        allowed = {"name", "listen", "target", "enabled", "ws"}
+        allowed = {"name", "listen", "target", "enabled"}
         bad = set(fields) - allowed
         if bad:
             raise ConfigError(f"不支持的字段: {bad}")
@@ -197,7 +195,6 @@ class ConfigStore:
             new_target = fields.get("target", rule.target)
             new_name = fields.get("name", rule.name)
             new_enabled = fields.get("enabled", rule.enabled)
-            new_ws = fields.get("ws", rule.ws)
             # 校验候选（不触碰原对象）
             candidate_listen = str(new_listen).strip()
             candidate_target = str(new_target).strip()
@@ -206,14 +203,13 @@ class ConfigStore:
             if "listen" in fields:
                 others = [r for r in self.rules if r.id != rid]
                 probe = Rule(rid, "probe", candidate_listen, candidate_target,
-                              bool(new_enabled), bool(new_ws))
+                              bool(new_enabled))
                 self._check_listen_unique(others + [probe])
             # 校验通过，提交到原对象
             rule.listen = candidate_listen
             rule.target = candidate_target
             rule.name = str(new_name).strip()[:64] or rule.name
             rule.enabled = bool(new_enabled)
-            rule.ws = bool(new_ws)
             self._save_locked()
             return rule
 
