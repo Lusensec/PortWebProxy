@@ -40,6 +40,10 @@ python app.py                 # 默认管理界面 http://127.0.0.1:9000
 - 登录后右上角可**修改密码** / **退出**；改密即时生效
 - 会话 Cookie 为 HMAC 签名 + 24h 过期，`HttpOnly` + `SameSite=Strict`
 
+登录页（启用密码后访问管理界面跳转至此）：
+
+![PortWebProxy 登录页](docs/screenshot-login.png)
+
 ```jsonc
 // config.json
 {
