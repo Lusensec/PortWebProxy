@@ -62,7 +62,8 @@ python app.py                 # 默认管理界面 http://127.0.0.1:9000
 - **GitHub**（推荐，自动 CI 构建 Linux/macOS）：https://github.com/Lusensec/PortWebProxy/releases
   - 3 个 artifact：`PortWebProxy.exe`（Windows）/ `PortWebProxy-linux-x86_64.tar.gz`（Linux）/ `PortWebProxy-macos-universal.zip`（macOS）
   - 下载后：Windows 双击 exe；Linux `tar -xzf ... && chmod +x PortWebProxy && ./PortWebProxy`；macOS `unzip ... && chmod +x PortWebProxy && ./PortWebProxy`
-- **Gitee**（国内镜像，asset 与 GitHub 同步）：https://gitee.com/lusensec/PortWebProxy/releases
+- **Gitee**（国内镜像）：https://gitee.com/lusensec/PortWebProxy/releases
+  - Gitee 的 v5 API 不支持直接上传二进制 asset，所以 Gitee release 页只放**说明 + 指向 GitHub Release 的下载链接**，3 个平台 artifact 统一从 GitHub 下。国内访问 GitHub 慢可走代理，或 `git clone` 后本地 `pyinstaller` 打包（见下方「从源码运行」）。
 
 ## 从源码运行（Python 原项目通用）
 
