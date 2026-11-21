@@ -52,6 +52,15 @@ def build_api(store: ConfigStore, registry: RuleRegistry,
         def _send_err(self, code: int, msg: str, err_code: str = "error"):
             self._send(code, {"error": msg, "code": err_code})
 
+        def _send_429(self, retry_after: int, msg: str = "登录尝试过于频繁，请稍后再试"):
+            body = json.dumps({"error": msg, "code": "rate_limited", "retry_after": retry_after}).encode()
+            self.send_response(429)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Retry-After", str(retry_after))
+            self.end_headers()
+            self.wfile.write(body)
+
         def _send_json_with_cookie(self, code: int, payload, set_cookie: Optional[str] = None):
             body = json.dumps(payload, ensure_ascii=False).encode()
             self.send_response(code)
@@ -255,10 +264,17 @@ def build_api(store: ConfigStore, registry: RuleRegistry,
 
         # ---------------- 认证动作 ----------------
         def _login(self):
+            ip = self.client_address[0]
+            # 登录节流：锁定期内直接 429，不做密码校验（不泄露对错）
+            allowed, retry = auth.login_allowed(ip)
+            if not allowed:
+                return self._send_429(retry)
             body = self._read_body()
             pwd = str(body.get("password", ""))
             if not auth.check_password(pwd):
+                auth.login_failed(ip)
                 return self._send_err(401, "密码错误", "bad_password")
+            auth.login_ok(ip)
             cookie_val = auth.issue_cookie()
             return self._send_json_with_cookie(
                 200, {"ok": True},
