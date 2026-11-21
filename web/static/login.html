@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PortWebProxy 登录</title>
+<style>
+  :root{--bg:#0f172a;--card:#1e293b;--line:#334155;--txt:#e2e8f0;--mut:#94a3b8;--acc:#38bdf8;--bad:#f87171;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,"Microsoft YaHei",sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh}
+  .box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:32px;width:340px}
+  h1{font-size:18px;margin:0 0 4px}
+  .sub{color:var(--mut);font-size:12px;margin-bottom:20px}
+  label{display:block;color:var(--mut);font-size:11px;margin-bottom:6px}
+  input{width:100%;background:#0b1220;border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:9px 11px;font-size:14px}
+  button{width:100%;margin-top:14px;background:var(--acc);border:none;color:#04121f;font-weight:700;padding:10px;border-radius:6px;cursor:pointer;font-size:14px}
+  button:disabled{opacity:.6;cursor:wait}
+  .err{color:var(--bad);font-size:12px;margin-top:10px;min-height:16px}
+</style>
+</head>
+<body>
+  <div class="box">
+    <h1>PortWebProxy</h1>
+    <div class="sub">请输入管理密码</div>
+    <form onsubmit="return doLogin(event)">
+      <label>密码</label>
+      <input type="password" id="pwd" autofocus autocomplete="current-password">
+      <button type="submit" id="btn">登 录</button>
+      <div class="err" id="err"></div>
+    </form>
+  </div>
+<script>
+async function doLogin(e){
+  e.preventDefault();
+  const btn=document.getElementById('btn'), err=document.getElementById('err');
+  btn.disabled=true; err.textContent='';
+  try{
+    const r=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:document.getElementById('pwd').value})});
+    if(r.ok){ location.href='/'; return false; }
+    const d=await r.json().catch(()=>({}));
+    err.textContent=d.error||('HTTP '+r.status);
+  }catch(ex){ err.textContent='网络错误: '+ex.message; }
+  btn.disabled=false;
+  return false;
+}
+</script>
+</body>
+</html>

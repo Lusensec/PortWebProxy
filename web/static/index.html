@@ -41,8 +41,16 @@
 </style>
 </head>
 <body>
-  <h1>PortWebProxy 控制台</h1>
-  <div class="sub">简易反向代理 · 多端口转发 · 热生效，无需重启</div>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start">
+    <div>
+      <h1>PortWebProxy 控制台</h1>
+      <div class="sub">简易反向代理 · 多端口转发 · 热生效，无需重启</div>
+    </div>
+    <div id="authbar" style="display:none;gap:8px">
+      <button class="btn sm ghost" onclick="changePwd()">修改密码</button>
+      <button class="btn sm ghost" onclick="logout()">退出</button>
+    </div>
+  </div>
 
   <div class="stat" id="stat"></div>
 
@@ -68,6 +76,7 @@ const $ = id => document.getElementById(id);
 function toast(msg, err){ const t=$('toast'); t.textContent=msg; t.className='toast show'+(err?' err':''); setTimeout(()=>t.classList.remove('show'),3000); }
 async function api(method, url, body){
   const r = await fetch(url, {method, headers:{'Content-Type':'application/json'}, body: body?JSON.stringify(body):undefined});
+  if(r.status===401){ location.href='/login'; throw new Error('未认证'); }
   const data = await r.json().catch(()=>({}));
   if(!r.ok) throw new Error(data.error||('HTTP '+r.status));
   return data;
@@ -76,6 +85,9 @@ async function api(method, url, body){
 async function refresh(){
   try{
     const [rules, status] = await Promise.all([api('GET','/api/rules'), api('GET','/api/status')]);
+    // 认证条：有密码且已登录时显示 修改密码/退出
+    const auth = rules.auth || {};
+    document.getElementById('authbar').style.display = (auth.enabled && auth.authenticated) ? 'flex' : 'none';
     const sb = $('stat');
     sb.innerHTML = `
       <div class="pill"><b>${status.total}</b><span>规则总数</span></div>
@@ -97,7 +109,22 @@ async function refresh(){
         </td>`;
       rows.appendChild(tr);
     }
-  }catch(e){ toast('刷新失败: '+e.message, true); }
+  }catch(e){ if(e.message!=='未认证') toast('刷新失败: '+e.message, true); }
+}
+
+async function logout(){
+  try{ await api('POST','/logout'); location.href='/login'; }catch(e){ location.href='/login'; }
+}
+
+async function changePwd(){
+  const old = prompt('当前密码：');
+  if(old===null) return;
+  const neu = prompt('新密码（留空 = 取消密码保护）：');
+  if(neu===null) return;
+  try{
+    await api('POST','/api/password',{old, new:neu});
+    toast(neu ? '密码已修改' : '已取消密码保护');
+  }catch(e){ toast('改密失败: '+e.message, true); }
 }
 
 function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }

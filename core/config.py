@@ -9,7 +9,7 @@ import os
 import threading
 import uuid
 from dataclasses import asdict, dataclass, field
-from typing import List
+from typing import List, Optional
 
 DEFAULT_CONFIG = "config.json"
 
@@ -113,12 +113,18 @@ def _unique_id(existing: List[str]) -> str:
 
 
 class ConfigStore:
-    """线程安全的 config.json 读写。"""
+    """线程安全的 config.json 读写。
+
+    顶层结构: {"rules": [...], "password": "...", "password_expiry_hours": 24}
+    password 缺省 = None（未启用登录）。
+    """
 
     def __init__(self, path: str = DEFAULT_CONFIG):
         self.path = path
         self._lock = threading.RLock()
         self.rules: List[Rule] = []
+        self.password: Optional[str] = None
+        self.password_expiry_hours: int = 24
 
     # ---------- 持久化 ----------
     def load(self) -> List[Rule]:
@@ -135,15 +141,32 @@ class ConfigStore:
                 r.validate()
             self._check_listen_unique(rules)
             self.rules = rules
+            # 顶层认证字段（缺省 = 未启用）
+            self.password = data.get("password") or None
+            self.password_expiry_hours = int(data.get("password_expiry_hours", 24) or 24)
             return rules
 
     def _save_locked(self) -> None:
         with self._lock:
             payload = {"rules": [r.to_dict() for r in self.rules]}
+            if self.password:
+                payload["password"] = self.password
+                payload["password_expiry_hours"] = self.password_expiry_hours
             tmp = self.path + ".tmp"
             with open(tmp, "w", encoding="utf-8") as f:
                 json.dump(payload, f, ensure_ascii=False, indent=2)
             os.replace(tmp, self.path)
+
+    # ---------- 认证字段 ----------
+    def get_password(self) -> Optional[str]:
+        with self._lock:
+            return self.password
+
+    def set_password(self, new_password: Optional[str]) -> None:
+        """写盘持久化密码；传 None 清空。"""
+        with self._lock:
+            self.password = new_password or None
+            self._save_locked()
 
     def _check_listen_unique(self, rules: List[Rule]) -> None:
         seen = set()

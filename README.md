@@ -26,7 +26,28 @@ python app.py                 # 默认管理界面 http://127.0.0.1:9000
 | `--port` | 9000 | 管理界面端口 |
 | `--host` | 127.0.0.1 | 管理界面绑定地址（勿直接暴露公网） |
 | `--config` | config.json | 配置文件路径 |
+| `--password` | 无 | Web 管理界面登录密码（覆盖 config 中的 `password`） |
+| `--password-expiry-hours` | 24 | 登录会话有效期（小时） |
 | `--log-level` | INFO | 日志级别 |
+
+## 认证（可选）
+
+管理界面无鉴权是默认行为；暴露公网前建议开启登录密码，**转发流量不受影响**（只锁管理面）：
+
+- **CLI 临时**：`python app.py --password mysecret`（仅本次运行，不落盘）
+- **config 持久**：在 `config.json` 顶层加 `"password": "mysecret"`（重启自动生效）；可选 `"password_expiry_hours": 24`
+- 优先级：`--password` > `config.password` > 无密码（免登录）
+- 登录后右上角可**修改密码** / **退出**；改密即时生效
+- 会话 Cookie 为 HMAC 签名 + 24h 过期，`HttpOnly` + `SameSite=Strict`
+
+```jsonc
+// config.json
+{
+  "rules": [ ... ],
+  "password": "mysecret",
+  "password_expiry_hours": 24
+}
+```
 
 ## 规则字段
 
