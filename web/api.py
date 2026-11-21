@@ -52,8 +52,8 @@ def build_api(store: ConfigStore, registry: RuleRegistry,
         def _send_err(self, code: int, msg: str, err_code: str = "error"):
             self._send(code, {"error": msg, "code": err_code})
 
-        def _send_429(self, retry_after: int, msg: str = "登录尝试过于频繁，请稍后再试"):
-            body = json.dumps({"error": msg, "code": "rate_limited", "retry_after": retry_after}).encode()
+        def _send_429(self, retry_after: int, msg: str = "登录尝试过于频繁，请5分钟后再试"):
+            body = json.dumps({"error": msg, "code": "rate_limited", "retry_after": retry_after}, ensure_ascii=False).encode()
             self.send_response(429)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
