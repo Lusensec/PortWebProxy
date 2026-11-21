@@ -73,8 +73,7 @@ def main():
             time.sleep(3600)
     except KeyboardInterrupt:
         log.info("正在退出…")
-        for rid in list(registry._listeners):
-            registry.stop_rule(rid)
+        registry.stop_all()
         log.info("已退出")
 
 
