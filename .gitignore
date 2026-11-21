@@ -3,13 +3,16 @@ __pycache__/
 *.pyc
 *.pyo
 
+# PyInstaller 构建产物
+dist/
+build/
+*.spec
+
 # 运行期生成
 config.json.tmp
+*.log
 
 # IDE
 .vscode/
 .idea/
 *.swp
-
-# 日志
-*.log

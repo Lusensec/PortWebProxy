@@ -1,12 +1,15 @@
 """管理 REST API + 静态页。
 
 基于 ThreadingHTTPServer，零第三方依赖。
+静态文件目录在 PyInstaller 打包后位于 _MEIPASS（临时解包目录），
+开发时位于源码目录；用 sys.frozen 区分。
 """
 from __future__ import annotations
 
 import json
 import logging
 import os
+import sys
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Optional
@@ -14,7 +17,12 @@ from typing import Optional
 from core.config import ConfigError, ConfigStore, Rule
 from core.manager import RuleRegistry
 
-STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+if getattr(sys, "frozen", False):
+    # PyInstaller 打包后：静态文件随包进 _MEIPASS/static/
+    STATIC_DIR = os.path.join(getattr(sys, "_MEIPASS", os.path.dirname(sys.argv[0])), "static")
+else:
+    # 开发时：静态文件在源码 web/static/
+    STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 
 
 def build_api(store: ConfigStore, registry: RuleRegistry, logger: logging.Logger) -> type[BaseHTTPRequestHandler]:

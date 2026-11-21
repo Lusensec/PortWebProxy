@@ -48,3 +48,37 @@ python app.py                 # 默认管理界面 http://127.0.0.1:9000
 - 管理界面无鉴权，仅限本机 / 受控网络使用
 - 不终结 HTTPS/TLS、不做连接池复用
 - 上游不可达时客户端快速收到连接重置并记日志
+
+## 运行环境
+
+- **Python**：3.8+（纯标准库，无第三方依赖；打包版无需用户侧装 Python）
+- **操作系统**：
+  - **Windows**：Win10/11 x86_64（`PortWebProxy.exe` 单文件，双击或命令行运行）
+  - **Linux**：Debian/Ubuntu 22.04+、Fedora 38+、RHEL 9 等较新发行版（glibc ≥ 2.34；更老的 distro 可能跑不起来）
+  - **macOS**：macOS 12+（Apple Silicon 与 Intel 通用；首次运行被 Gatekeeper 拦时右键→打开，或 `xattr -d com.apple.quarantine PortWebProxy`）
+
+## Releases 下载
+
+- **GitHub**（推荐，自动 CI 构建 Linux/macOS）：https://github.com/Lusensec/PortWebProxy/releases
+  - 3 个 artifact：`PortWebProxy.exe`（Windows）/ `PortWebProxy-linux-x86_64.tar.gz`（Linux）/ `PortWebProxy-macos-universal.zip`（macOS）
+  - 下载后：Windows 双击 exe；Linux `tar -xzf ... && chmod +x PortWebProxy && ./PortWebProxy`；macOS `unzip ... && chmod +x PortWebProxy && ./PortWebProxy`
+- **Gitee**（国内镜像，asset 与 GitHub 同步）：https://gitee.com/lusensec/PortWebProxy/releases
+
+## 从源码运行（Python 原项目通用）
+
+Python 源码项目**通用**：任何 Python 3.8+ 环境（Windows/Linux/macOS）都可直接 `python app.py` 运行，无需打包。打包只是省去用户装 Python 的步骤，功能与源码完全一致。
+
+```bash
+cd PortWebProxy
+python app.py --port 9000 --config config.json
+```
+
+打包命令（PyInstaller）：
+
+| 平台 | 命令 |
+|---|---|
+| Windows | `pyinstaller --onefile --console --clean --name PortWebProxy --add-data "web/static;static" app.py` |
+| Linux / macOS | `pyinstaller --onefile --console --clean --name PortWebProxy --add-data "web/static:static" app.py` |
+
+> 注意 `--add-data` 的分隔符：Windows 用 `;`，Unix 用 `:`。CI 已按平台处理。
+
