@@ -36,7 +36,7 @@ def build_api(store: ConfigStore, registry: RuleRegistry,
               auth: Auth, logger: logging.Logger) -> type[BaseHTTPRequestHandler]:
     """返回绑定 store/registry/auth 的 handler 类（工厂闭包）。"""
 
-    class PwpHandler(BaseHTTPRequestHandler):
+    class AdminHandler(BaseHTTPRequestHandler):
         server_version = "PortFerry/1.0"
 
         # ---------------- 基础设施 ----------------
@@ -310,7 +310,7 @@ def build_api(store: ConfigStore, registry: RuleRegistry,
             auth.password = new  # 热生效
             return self._send(200, {"ok": True, "password_changed": True})
 
-    return PwpHandler
+    return AdminHandler
 
 
 def start_admin_server(host: str, port: int, store: ConfigStore,
