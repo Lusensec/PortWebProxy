@@ -16,15 +16,15 @@ jobs:
       - name: Install PyInstaller
         run: pip install pyinstaller
       - name: Build
-        run: pyinstaller --onefile --console --clean --name PortWebProxy --add-data "web/static:static" app.py
+        run: pyinstaller --onefile --console --clean --name PortFerry --add-data "web/static:static" app.py
       - name: Package
         run: |
-          cd dist && tar -czf ../PortWebProxy-linux-x86_64.tar.gz PortWebProxy && cd ..
+          cd dist && tar -czf ../PortFerry-linux-x86_64.tar.gz PortFerry && cd ..
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: PortWebProxy-linux-x86_64
-          path: PortWebProxy-linux-x86_64.tar.gz
+          name: PortFerry-linux-x86_64
+          path: PortFerry-linux-x86_64.tar.gz
 
   build-macos:
     runs-on: macos-latest
@@ -36,12 +36,12 @@ jobs:
       - name: Install PyInstaller
         run: pip install pyinstaller
       - name: Build
-        run: pyinstaller --onefile --console --clean --name PortWebProxy --add-data "web/static:static" app.py
+        run: pyinstaller --onefile --console --clean --name PortFerry --add-data "web/static:static" app.py
       - name: Package
         run: |
-          cd dist && zip -r ../PortWebProxy-macos-universal.zip PortWebProxy && cd ..
+          cd dist && zip -r ../PortFerry-macos-universal.zip PortFerry && cd ..
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: PortWebProxy-macos
-          path: PortWebProxy-macos-universal.zip
+          name: PortFerry-macos
+          path: PortFerry-macos-universal.zip

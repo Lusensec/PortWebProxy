@@ -1,4 +1,4 @@
-"""PortWebProxy 入口：启动管理服务器 + 全部转发监听。
+"""PortFerry 入口：启动管理服务器 + 全部转发监听。
 
 用法:
   python app.py --port 9000 --host 127.0.0.1 --config config.json
@@ -24,11 +24,11 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
     datefmt="%H:%M:%S",
 )
-log = logging.getLogger("pwp")
+log = logging.getLogger("pf")
 
 
 def parse_args():
-    p = argparse.ArgumentParser(description="PortWebProxy - 简易反向代理")
+    p = argparse.ArgumentParser(description="PortFerry - 简易反向代理")
     p.add_argument("--port", type=int, default=9000, help="管理界面端口 (默认 9000)")
     p.add_argument("--host", default="127.0.0.1", help="管理界面绑定地址 (默认 127.0.0.1)")
     p.add_argument("--config", default="config.json", help="配置文件路径")
@@ -65,7 +65,7 @@ def main():
     auth = Auth(password, expiry)
 
     start_admin_server(args.host, args.port, store, registry, auth, log)
-    log.info("PortWebProxy 已启动，%d 条规则，管理界面 http://%s:%d", len(rules), args.host, args.port)
+    log.info("PortFerry 已启动，%d 条规则，管理界面 http://%s:%d", len(rules), args.host, args.port)
     log.info("按 Ctrl+C 退出")
 
     try:

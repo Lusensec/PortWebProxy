@@ -1,1 +1,1 @@
-"""PortWebProxy core."""
+"""PortFerry core."""

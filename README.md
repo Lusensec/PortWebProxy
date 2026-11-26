@@ -1,4 +1,4 @@
-# PortWebProxy
+# PortFerry
 
 Python 零依赖简易 TCP 端口转发器：多条「监听端口 → 转发目标」规则，纯字节双向管道透传（任意协议，含 HTTP），带 Web 管理界面，配置热生效。
 
@@ -6,12 +6,12 @@ Python 零依赖简易 TCP 端口转发器：多条「监听端口 → 转发目
 
 管理控制台（深色主题）：顶部统计卡片、规则新增表单、带实线分隔与斑马纹的规则列表，开关/删除即时生效。
 
-![PortWebProxy 管理控制台](docs/screenshot.png)
+![PortFerry 管理控制台](docs/screenshot.png)
 
 ## 快速开始
 
 ```bash
-cd PortWebProxy
+cd PortFerry
 python app.py                 # 默认管理界面 http://127.0.0.1:9000
 ```
 
@@ -42,7 +42,7 @@ python app.py                 # 默认管理界面 http://127.0.0.1:9000
 
 登录页（启用密码后访问管理界面跳转至此）：
 
-![PortWebProxy 登录页](docs/screenshot-login.png)
+![PortFerry 登录页](docs/screenshot-login.png)
 
 ```jsonc
 // config.json

@@ -16,7 +16,7 @@ from .forwarder import Forwarder
 class RuleRegistry:
     def __init__(self, store: ConfigStore, logger: Optional[logging.Logger] = None):
         self.store = store
-        self.log = logger or logging.getLogger("pwp")
+        self.log = logger or logging.getLogger("pf")
         self._active: Dict[str, Forwarder] = {}      # rule_id -> Forwarder
         self._listeners: Dict[str, socket.socket] = {}  # rule_id -> listen socket
 

@@ -29,7 +29,7 @@ if getattr(sys, "frozen", False):
 else:
     STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 
-SESSION_COOKIE = "pwp_session"
+SESSION_COOKIE = "pf_session"
 
 
 def build_api(store: ConfigStore, registry: RuleRegistry,
@@ -37,7 +37,7 @@ def build_api(store: ConfigStore, registry: RuleRegistry,
     """返回绑定 store/registry/auth 的 handler 类（工厂闭包）。"""
 
     class PwpHandler(BaseHTTPRequestHandler):
-        server_version = "PortWebProxy/1.0"
+        server_version = "PortFerry/1.0"
 
         # ---------------- 基础设施 ----------------
         def _send(self, code: int, payload, content_type: str = "application/json; charset=utf-8"):
